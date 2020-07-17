@@ -5,6 +5,7 @@ use crate::types::{
     Point,
     Shape,
     ShapeGeometry,
+    Color,
     ComplexGeometry,
 };
 
@@ -67,7 +68,7 @@ fn get_neighbours_map(img: &RgbaImage) -> NeighboursMap {
 
 use std::collections::HashSet;
 
-fn collect_complex_shape_rec(start_point: &Point, neighbours: &NeighboursMap, processed: &mut HashSet<Point>, shape_points: &mut ComplexGeometry) {
+fn collect_complex_shape(start_point: &Point, neighbours: &NeighboursMap, processed: &mut HashSet<Point>, shape_points: &mut HashSet<Point>) {
     if !neighbours.contains_key(start_point) {
         return;
     }
@@ -77,10 +78,10 @@ fn collect_complex_shape_rec(start_point: &Point, neighbours: &NeighboursMap, pr
     }
 
     processed.insert(*start_point);
-    shape_points.push(*start_point);
+    shape_points.insert(*start_point);
 
     for near in neighbours.get(start_point).unwrap() {
-        collect_complex_shape_rec(near, neighbours, processed, shape_points);
+        collect_complex_shape(near, neighbours, processed, shape_points);
     }
 }
 
@@ -95,14 +96,13 @@ pub fn get_shapes(img_path: &str) -> Result<Vec<Shape>, image::ImageError> {
     for p in neighbours.iter() {
         let (point, _nears) = p;
         if !processed.contains(point) {
-            let mut complex_geometry = ComplexGeometry::new();
+            let mut geometry_points: HashSet<Point> = HashSet::new();
 
-            collect_complex_shape_rec(point, &neighbours, &mut processed, &mut complex_geometry);
+            collect_complex_shape(point, &neighbours, &mut processed, &mut geometry_points);
 
-            let shape = Shape {
-                geometry: ShapeGeometry::Complex(complex_geometry),
-                ..Shape::default()
-            };
+            let complex_geometry = ComplexGeometry::new(geometry_points);
+            let shape_geometry = ShapeGeometry::Complex(complex_geometry);
+            let shape = Shape::new(Color::BLACK, shape_geometry);
             shapes.push(shape);
         }
     }

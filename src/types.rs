@@ -1,5 +1,3 @@
-use image::RgbaImage;
-
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub struct Point
 {
@@ -9,14 +7,14 @@ pub struct Point
 
 impl Point
 {
-	pub fn new<T: num::cast::AsPrimitive<usize>>(x: T, y: T) -> Point {
+	pub fn new<T: num::cast::AsPrimitive<usize>>(x: T, y: T) -> Self {
 		Point {
 			x: x.as_(),
 			y: y.as_(),
 		}
 	}
 
-	pub fn get_neighbour(&self, x_diff: i8, y_diff: i8) -> Option<Point> {
+	pub fn get_neighbour(&self, x_diff: i8, y_diff: i8) -> Option<Self> {
 		if x_diff < 0 && (self.x < (-x_diff as usize)) {
 			return None;
 		}
@@ -29,15 +27,21 @@ impl Point
 	}
 }
 
+impl Default for Point
+{
+	fn default() -> Self {
+		Point::new(0, 0)
+	}
+}
+
+#[derive(Default, Clone, Copy, Debug)]
 pub struct BBox
 {
 	pub bl: Point,
 	pub tr: Point,
 }
 
-use std::collections::HashMap;
-pub type NeighboursMap = HashMap<Point, Vec<Point>>;
-
+#[derive(Default, Clone, Copy, Debug)]
 pub struct Color
 {
 	pub r: u8,
@@ -45,32 +49,46 @@ pub struct Color
 	pub b: u8,
 }
 
-fn is_solid_color(rgba: &[u8; 4]) -> bool {
-	let is_transparent = rgba[3] != 255;
-	let is_white = is_transparent || (rgba[0] == 255 && rgba[1] == 255 && rgba[2] == 255);
+impl Color
+{
+	pub const BLACK: Self = Color::new(0, 0, 0);
 
-	!is_white
-}
-
-pub fn is_solid_coord(img: &RgbaImage, point: &Point) -> bool {
-	let (width, height) = img.dimensions();
-	let width = width as usize;
-	let height = height as usize;
-
-	let (x, y) = (point.x, point.y);
-
-	if x >= width || y >= height {
-		return false;
+	pub const fn new(r: u8, g: u8, b:u8) -> Self {
+		Color {r, g, b}
 	}
-
-	let xy = img.get_pixel(x as u32, y as u32);
-	is_solid_color(&xy.0)
 }
 
-pub fn process_neighbour(p: &Point, x_diff: i8, y_diff: i8, v: &mut Vec<Point>, img: &RgbaImage) {
-	if let Some(neighbour) = p.get_neighbour(x_diff, y_diff) {
-		if is_solid_coord(img, &neighbour) {
-			v.push(neighbour);
+use std::collections::HashMap;
+pub type NeighboursMap = HashMap<Point, Vec<Point>>;
+pub type ComplexGeometry = Vec<Point>;
+
+#[derive(Clone, Debug)]
+pub enum ShapeGeometry
+{
+	Box(BBox),
+	Complex(ComplexGeometry),
+}
+
+impl Default for ShapeGeometry
+{
+	fn default() -> Self {
+		ShapeGeometry::Box(BBox::default())
+	}
+}
+
+#[derive(Clone, Debug)]
+pub struct Shape
+{
+	pub color: Color,
+	pub geometry: ShapeGeometry,
+}
+
+impl Default for Shape
+{
+	fn default() -> Self {
+		Shape {
+			color: Color::BLACK,
+			geometry: ShapeGeometry::default()
 		}
 	}
 }

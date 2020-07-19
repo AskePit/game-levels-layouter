@@ -7,6 +7,7 @@ use crate::types::{
     ShapeGeometry,
     Color,
     ComplexGeometry,
+    BBox,
 };
 
 
@@ -90,6 +91,11 @@ pub fn get_shapes(img_path: &str) -> Result<Vec<Shape>, image::ImageError> {
     let img = image::open(img_path)?.into_rgba();
     let neighbours = get_neighbours_map(&img);
 
+    Ok(get_shapes_by_neighbour_points(neighbours))
+}
+
+pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> Vec<Shape> {
+
     let mut shapes = Vec::new();
     let mut processed: HashSet<Point> = HashSet::new();
 
@@ -100,12 +106,58 @@ pub fn get_shapes(img_path: &str) -> Result<Vec<Shape>, image::ImageError> {
 
             collect_complex_shape(point, &neighbours, &mut processed, &mut geometry_points);
 
-            let complex_geometry = ComplexGeometry::new(geometry_points);
-            let shape_geometry = ShapeGeometry::Complex(complex_geometry);
-            let shape = Shape::new(Color::BLACK, shape_geometry);
+            let shape =
+                if geometry_points.len() == 1 {
+                    let point_geometry = ShapeGeometry::Pixel(*geometry_points.iter().next().unwrap());
+                    Shape::new(Color::BLACK, point_geometry)
+                } else if let Some(bbox) = are_points_is_bbox(&geometry_points) {
+                    let box_geometry = ShapeGeometry::Box(bbox);
+                    Shape::new(Color::BLACK, box_geometry)
+                } else {
+                    let complex_geometry = ComplexGeometry::new(geometry_points);
+                    let shape_geometry = ShapeGeometry::Complex(complex_geometry);
+                    Shape::new(Color::BLACK, shape_geometry)
+                };
+
             shapes.push(shape);
         }
     }
 
-    Ok(shapes)
+    shapes
+}
+
+fn are_points_is_bbox(points: &HashSet<Point>) -> Option<BBox> {
+    let bbox = calc_bbox_by_points(points);
+
+    if bbox.get_points_count() == points.len() {
+        Some(bbox)
+    } else {
+        None
+    }
+}
+
+pub fn calc_bbox_by_points(points: &HashSet<Point>) -> BBox {
+
+    let mut bbox = BBox::default();
+
+    if points.is_empty() {
+        return bbox;
+    }
+
+    let mut min_x: usize = 9999;
+    let mut max_x: usize = 0;
+    let mut min_y: usize = 9999;
+    let mut max_y: usize = 0;
+
+    for point in points {
+        min_x = min_x.min(point.x);
+        max_x = max_x.max(point.x);
+        min_y = min_y.min(point.y);
+        max_y = max_y.max(point.y);
+    }
+
+    bbox.min = Point::new(min_x, min_y);
+    bbox.max = Point::new(max_x, max_y);
+
+    bbox
 }

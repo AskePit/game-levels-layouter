@@ -1,0 +1,47 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug executable 'layouter'",
+			"cargo": {
+				"args": [
+					"build",
+					"--bin=layouter",
+					"--package=layouter"
+				],
+				"filter": {
+					"name": "layouter",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/target/debug/layouter.exe"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug unit tests in executable 'layouter'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--bin=layouter",
+					"--package=layouter"
+				],
+				"filter": {
+					"name": "layouter",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/target/debug/layouter.exe"
+		}
+	]
+}

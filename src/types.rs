@@ -106,7 +106,7 @@ impl Color
 	}
 }
 
-pub type NeighboursMap = HashMap<Point, Vec<Point>>;
+pub type NeighboursMap = HashMap<Point, (Color, Vec<Point>)>;
 
 #[derive(Clone, Debug, Default)]
 pub struct ComplexGeometry
@@ -285,9 +285,9 @@ impl SplittedComplexGeometry
 				let p = Point::new(x, y);
 
 				if points.contains(&p) {
-					neighbours.insert(p, Vec::new());
+					neighbours.insert(p, (Color::BLACK, Vec::new()));
 
-					let v = neighbours.get_mut(&p).unwrap();
+					let v = &mut neighbours.get_mut(&p).unwrap().1;
 
 					if let Some(neighbour) = p.get_neighbour(-1, 0) {
 						if points.contains(&neighbour) {

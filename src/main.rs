@@ -7,7 +7,7 @@ mod utils;
 mod tests;
 
 fn main() {
-    let shapes = utils::get_shapes("assets/black_sample.png").unwrap();
+    let shapes = utils::get_shapes("assets/color_sample.png").unwrap();
 
     println!("{:#?}", shapes);
 }

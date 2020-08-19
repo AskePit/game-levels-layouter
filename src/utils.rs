@@ -10,6 +10,15 @@ use crate::types::{
     BBox,
 };
 
+fn is_point_in_image(img: &RgbaImage, point: &Point) -> bool {
+    let (width, height) = img.dimensions();
+	let width = width as usize;
+	let height = height as usize;
+
+	let (x, y) = (point.x, point.y);
+
+	x < width && y < height
+}
 
 fn is_solid_color(rgba: &[u8; 4]) -> bool {
 	let is_transparent = rgba[3] != 255;
@@ -19,23 +28,24 @@ fn is_solid_color(rgba: &[u8; 4]) -> bool {
 }
 
 fn is_solid_coord(img: &RgbaImage, point: &Point) -> bool {
-	let (width, height) = img.dimensions();
-	let width = width as usize;
-	let height = height as usize;
+	if !is_point_in_image(img, point) {
+        return false
+    }
 
-	let (x, y) = (point.x, point.y);
-
-	if x >= width || y >= height {
-		return false;
-	}
-
-	let xy = img.get_pixel(x as u32, y as u32);
+	let xy = img.get_pixel(point.x as u32, point.y as u32);
 	is_solid_color(&xy.0)
+}
+
+fn is_same_color(img: &RgbaImage, p1: &Point, p2: &Point) -> bool {
+    if !is_point_in_image(img, p1) || !is_point_in_image(img, p2) {
+        return false
+    }
+	img.get_pixel(p1.x as u32, p1.y as u32) == img.get_pixel(p2.x as u32, p2.y as u32)
 }
 
 fn process_neighbour(p: &Point, x_diff: i8, y_diff: i8, v: &mut Vec<Point>, img: &RgbaImage) {
 	if let Some(neighbour) = p.get_neighbour(x_diff, y_diff) {
-		if is_solid_coord(img, &neighbour) {
+		if is_same_color(img, &p, &neighbour) {
 			v.push(neighbour);
 		}
 	}
@@ -52,9 +62,12 @@ fn get_neighbours_map(img: &RgbaImage) -> NeighboursMap {
 
             if is_solid_coord(&img, &p) {
                 
-                neighbours.insert(p, Vec::new());
+                let pixel = img.get_pixel(p.x as u32, p.y as u32);
+                let color = Color::new(pixel[0], pixel[1], pixel[2]);
 
-                let v = neighbours.get_mut(&p).unwrap();
+                neighbours.insert(p, (color, Vec::new()));
+
+                let v = &mut neighbours.get_mut(&p).unwrap().1;
 
                 process_neighbour(&p, -1, 0, v, &img);
                 process_neighbour(&p, 1, 0, v, &img);
@@ -81,7 +94,7 @@ fn collect_complex_shape(start_point: &Point, neighbours: &NeighboursMap, proces
     processed.insert(*start_point);
     shape_points.insert(*start_point);
 
-    for near in neighbours.get(start_point).unwrap() {
+    for near in &neighbours.get(start_point).unwrap().1 {
         collect_complex_shape(near, neighbours, processed, shape_points);
     }
 }
@@ -100,7 +113,8 @@ pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> Vec<Shape> {
     let mut processed: HashSet<Point> = HashSet::new();
 
     for p in neighbours.iter() {
-        let (point, _nears) = p;
+        let (point, nears_info) = p;
+        let (color, _nears) = nears_info;
         if !processed.contains(point) {
             let mut geometry_points: HashSet<Point> = HashSet::new();
 
@@ -109,14 +123,14 @@ pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> Vec<Shape> {
             let shape =
                 if geometry_points.len() == 1 {
                     let point_geometry = ShapeGeometry::Pixel(*geometry_points.iter().next().unwrap());
-                    Shape::new(Color::BLACK, point_geometry)
+                    Shape::new(*color, point_geometry)
                 } else if let Some(bbox) = are_points_is_bbox(&geometry_points) {
                     let box_geometry = ShapeGeometry::Box(bbox);
-                    Shape::new(Color::BLACK, box_geometry)
+                    Shape::new(*color, box_geometry)
                 } else {
                     let complex_geometry = ComplexGeometry::new(geometry_points);
                     let shape_geometry = ShapeGeometry::Complex(complex_geometry);
-                    Shape::new(Color::BLACK, shape_geometry)
+                    Shape::new(*color, shape_geometry)
                 };
 
             shapes.push(shape);

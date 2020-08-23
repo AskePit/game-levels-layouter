@@ -27,25 +27,6 @@ fn test_black_image() {
 		assert_eq!(boxes_count, 2);
 		assert_eq!(complex_count, 5);
 	}
-
-	// complex geometry points count
-	{
-		let mut counts: HashMap<usize, usize> = HashMap::new();
-
-		for shape in &shapes {
-			if let ShapeGeometry::Complex(geom) = &shape.geometry {
-				*counts.entry(geom.get_points().len()).or_insert(0) += 1;
-			}
-		}
-
-		let samples: [(usize, usize); 5] = [(4, 1), (5, 1), (11, 1), (33, 1), (37, 1)];
-
-		for sample in samples.iter() {
-			let (pixels, count) = sample;
-
-			assert_eq!(*counts.get(pixels).unwrap(), *count);
-		}
-	}
 }
 
 #[test]

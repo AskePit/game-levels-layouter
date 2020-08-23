@@ -68,8 +68,11 @@ impl BBox
 		self.min == self.max
 	}
 
-	pub fn is_point_in(&self, point: &Point) -> bool {
-		point.x >= self.min.x && point.x <= self.max.x && point.y >= self.min.y && point.y <= self.max.y
+	pub fn contains(&self, point: &Point) -> bool {
+		point.x >= self.min.x &&
+		point.x <= self.max.x &&
+		point.y >= self.min.y &&
+		point.y <= self.max.y
 	}
 
 	pub fn get_width(&self) -> usize {
@@ -111,9 +114,8 @@ pub type NeighboursMap = HashMap<Point, (Color, Vec<Point>)>;
 #[derive(Clone, Debug, Default)]
 pub struct ComplexGeometry
 {
-	points: HashSet<Point>,
-	outer_bbox: BBox,
 	inner_geometry: SplittedComplexGeometry,
+	outer_bbox: BBox,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -332,25 +334,36 @@ impl ComplexGeometry
 {
 	pub fn new(points: HashSet<Point>) -> Self {
 		let mut n = Self {
-			points,
 			..Self::default()
 		};
-		n._calc_outer_bbox();
-		n._calc_inner_geometries();
+		n._calc_outer_bbox(&points);
+		n._calc_inner_geometries(&points);
 
 		n
 	}
 
-	fn _calc_outer_bbox(&mut self) {
-		self.outer_bbox = utils::calc_bbox_by_points(&self.points);
+	fn _calc_outer_bbox(&mut self, points: &HashSet<Point>) {
+		self.outer_bbox = utils::calc_bbox_by_points(points);
 	}
 
-	fn _calc_inner_geometries(&mut self) {
-		self.inner_geometry = SplittedComplexGeometry::new(&self.points, &self.outer_bbox);
+	fn _calc_inner_geometries(&mut self, points: &HashSet<Point>) {
+		self.inner_geometry = SplittedComplexGeometry::new(points, &self.outer_bbox);
 	}
 
-	pub fn get_points(&self) -> &HashSet<Point> {
-		&self.points
+	pub fn contains(&self, point: &Point) -> bool {
+		for bbox in &self.inner_geometry.inner_bboxes {
+			if bbox.contains(point) {
+				return true;
+			}
+		}
+
+		for p in &self.inner_geometry.inner_points {
+			if p == point {
+				return true;
+			}
+		}
+
+		false
 	}
 
 	pub fn get_outer_bbox(&self) -> &BBox {
@@ -375,13 +388,22 @@ impl ComplexGeometry
 			for y in outer.min.y ..= outer.max.y {
 				let p = Point::new(x, y);
 
-				if !self.points.contains(&p) {
+				if !self.contains(&p) {
 					return None;
 				}
 			}
 		}
 
 		Some(self.outer_bbox)
+	}
+
+	pub fn try_get_as_point(&self) -> Option<Point> {
+		let outer = &self.outer_bbox;
+		if outer.is_point() {
+			return Some(outer.min);
+		}
+
+		None
 	}
 }
 
@@ -424,8 +446,7 @@ impl Shape
 			color,
 			geometry: match &geometry {
 				ShapeGeometry::Complex(complex_geometry) => {
-					if complex_geometry.get_points().len() == 1 {
-						let point = complex_geometry.get_points().into_iter().cloned().next().unwrap();
+					if let Some(point) = complex_geometry.try_get_as_point() {
 						ShapeGeometry::Pixel(point)
 					} else if let Some(bbox) = complex_geometry.try_get_as_bbox() {
 						ShapeGeometry::Box(bbox)

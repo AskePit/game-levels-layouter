@@ -92,7 +92,7 @@ impl BBox
 	}
 }
 
-#[derive(Default, Clone, Copy, Debug)]
+#[derive(Default, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct Color
 {
 	pub r: u8,
@@ -275,7 +275,7 @@ impl SplittedComplexGeometry
 		let neighbours_map = Self::_get_neighbours_map(&points);
 		let shapes = utils::get_shapes_by_neighbour_points(neighbours_map);
 
-		shapes.into_iter().map(|x| x.geometry).collect()
+		shapes.into_iter().flat_map(|x| x.1).map(|x| x.geometry).collect()
 	}
 
 	fn _get_neighbours_map(points: &HashSet<Point>) -> NeighboursMap {
@@ -431,7 +431,6 @@ impl Default for ShapeGeometry
 #[derive(Clone, Debug)]
 pub struct Shape
 {
-	pub color: Color,
 	pub geometry: ShapeGeometry,
 }
 
@@ -439,7 +438,6 @@ impl Default for Shape
 {
 	fn default() -> Self {
 		Shape {
-			color: Color::BLACK,
 			geometry: ShapeGeometry::default()
 		}
 	}
@@ -447,9 +445,8 @@ impl Default for Shape
 
 impl Shape
 {
-	pub fn new(color: Color, geometry: ShapeGeometry) -> Self {
+	pub fn new(geometry: ShapeGeometry) -> Self {
 		Self {
-			color,
 			geometry: match &geometry {
 				ShapeGeometry::Complex(complex_geometry) => {
 					if let Some(point) = complex_geometry.try_get_as_point() {

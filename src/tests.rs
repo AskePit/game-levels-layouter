@@ -7,7 +7,8 @@ use std::iter::FromIterator;
 fn test_black_image() {
 	let shapes = utils::get_shapes("assets/black_sample.png").unwrap();
 
-	assert_eq!(shapes.len(), 10);
+	assert_eq!(shapes.len(), 1);
+	assert_eq!(shapes.get(&Color::BLACK).unwrap().len(), 10);
 
 	// shape types count
 	{
@@ -15,7 +16,7 @@ fn test_black_image() {
 		let mut boxes_count: usize = 0;
 		let mut complex_count: usize = 0;
 
-		for shape in &shapes {
+		for shape in shapes.get(&Color::BLACK).unwrap() {
 			match shape.geometry {
 				ShapeGeometry::Pixel(_) => points_count += 1,
 				ShapeGeometry::Box(_) => boxes_count += 1,
@@ -35,7 +36,7 @@ fn test_inner_complex_geometry() {
 
 	let mut count = 0usize;
 
-	for shape in &shapes {
+	for shape in shapes.get(&Color::BLACK).unwrap() {
 		if let ShapeGeometry::Complex(geom) = &shape.geometry {
 			let outer_bbox = geom.get_outer_bbox();
 			let points = geom.get_points();

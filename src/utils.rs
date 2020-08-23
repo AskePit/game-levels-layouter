@@ -1,5 +1,7 @@
 use image::RgbaImage;
 
+use std::collections::HashMap;
+
 use crate::types::{
     NeighboursMap,
     Point,
@@ -99,7 +101,7 @@ fn collect_complex_shape(start_point: &Point, neighbours: &NeighboursMap, proces
     }
 }
 
-pub fn get_shapes(img_path: &str) -> Result<Vec<Shape>, image::ImageError> {
+pub fn get_shapes(img_path: &str) -> Result<HashMap<Color, Vec<Shape>>, image::ImageError> {
 
     let img = image::open(img_path)?.into_rgba();
     let neighbours = get_neighbours_map(&img);
@@ -107,9 +109,9 @@ pub fn get_shapes(img_path: &str) -> Result<Vec<Shape>, image::ImageError> {
     Ok(get_shapes_by_neighbour_points(neighbours))
 }
 
-pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> Vec<Shape> {
+pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> HashMap<Color, Vec<Shape>> {
 
-    let mut shapes = Vec::new();
+    let mut shapes: HashMap<Color, Vec<Shape>> = HashMap::new();
     let mut processed: HashSet<Point> = HashSet::new();
 
     for p in neighbours.iter() {
@@ -123,17 +125,21 @@ pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> Vec<Shape> {
             let shape =
                 if geometry_points.len() == 1 {
                     let point_geometry = ShapeGeometry::Pixel(*geometry_points.iter().next().unwrap());
-                    Shape::new(*color, point_geometry)
+                    Shape::new(point_geometry)
                 } else if let Some(bbox) = are_points_is_bbox(&geometry_points) {
                     let box_geometry = ShapeGeometry::Box(bbox);
-                    Shape::new(*color, box_geometry)
+                    Shape::new(box_geometry)
                 } else {
                     let complex_geometry = ComplexGeometry::new(geometry_points);
                     let shape_geometry = ShapeGeometry::Complex(complex_geometry);
-                    Shape::new(*color, shape_geometry)
+                    Shape::new(shape_geometry)
                 };
 
-            shapes.push(shape);
+            if !shapes.contains_key(color) {
+                shapes.insert(*color, Vec::new());
+            }
+
+            shapes.get_mut(color).unwrap().push(shape);
         }
     }
 

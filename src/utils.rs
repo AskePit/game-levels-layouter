@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use image::RgbaImage;
 
 use std::collections::HashMap;
@@ -9,6 +11,7 @@ use crate::types::{
     Color,
     ComplexGeometry,
     BBox,
+    ShapesLayout,
 };
 
 fn is_point_in_image(img: &RgbaImage, point: &Point) -> bool {
@@ -100,7 +103,16 @@ fn collect_complex_shape(start_point: &Point, neighbours: &NeighboursMap, proces
     }
 }
 
-pub fn get_shapes(img_path: &str) -> Result<HashMap<Color, Vec<Shape>>, image::ImageError> {
+pub fn get_shapes_layout(img_path: &str) -> Result<ShapesLayout, image::ImageError> {
+    let res = ShapesLayout {
+        shapes: get_shapes(img_path)?,
+        color_dependencies: HashMap::new()
+    };
+
+    Ok(res)
+}
+
+fn get_shapes(img_path: &str) -> Result<HashMap<Color, Vec<Shape>>, image::ImageError> {
 
     let img = image::open(img_path)?.into_rgba();
     let neighbours = get_neighbours_map(&img);

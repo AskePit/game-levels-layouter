@@ -458,3 +458,10 @@ impl Shape
 		cloned
 	}
 }
+
+#[derive(Debug)]
+pub struct ShapesLayout
+{
+	pub shapes: HashMap<Color, Vec<Shape>>,
+	pub color_dependencies: HashMap<Color, HashSet<Color>>
+}

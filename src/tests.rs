@@ -5,10 +5,10 @@ use std::iter::FromIterator;
 
 #[test]
 fn test_black_image() {
-	let shapes = utils::get_shapes("assets/black_sample.png").unwrap();
+	let layout = utils::get_shapes_layout("assets/black_sample.png").unwrap();
 
-	assert_eq!(shapes.len(), 1);
-	assert_eq!(shapes.get(&Color::BLACK).unwrap().len(), 10);
+	assert_eq!(layout.shapes.len(), 1);
+	assert_eq!(layout.shapes.get(&Color::BLACK).unwrap().len(), 10);
 
 	// shape types count
 	{
@@ -16,7 +16,7 @@ fn test_black_image() {
 		let mut boxes_count: usize = 0;
 		let mut complex_count: usize = 0;
 
-		for shape in shapes.get(&Color::BLACK).unwrap() {
+		for shape in layout.shapes.get(&Color::BLACK).unwrap() {
 			match shape {
 				Shape::Pixel(_) => points_count += 1,
 				Shape::Box(_) => boxes_count += 1,
@@ -32,11 +32,11 @@ fn test_black_image() {
 
 #[test]
 fn test_inner_complex_geometry() {
-	let shapes = utils::get_shapes("assets/black_sample.png").unwrap();
+	let layout = utils::get_shapes_layout("assets/black_sample.png").unwrap();
 
 	let mut count = 0usize;
 
-	for shape in shapes.get(&Color::BLACK).unwrap() {
+	for shape in layout.shapes.get(&Color::BLACK).unwrap() {
 		if let Shape::Complex(geom) = &shape {
 			let outer_bbox = geom.get_outer_bbox();
 			let points = geom.get_points();

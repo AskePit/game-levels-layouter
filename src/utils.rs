@@ -6,7 +6,6 @@ use crate::types::{
     NeighboursMap,
     Point,
     Shape,
-    ShapeGeometry,
     Color,
     ComplexGeometry,
     BBox,
@@ -124,15 +123,12 @@ pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> HashMap<Colo
 
             let shape =
                 if geometry_points.len() == 1 {
-                    let point_geometry = ShapeGeometry::Pixel(*geometry_points.iter().next().unwrap());
-                    Shape::new(point_geometry)
+                    Shape::Pixel(*geometry_points.iter().next().unwrap())
                 } else if let Some(bbox) = are_points_is_bbox(&geometry_points) {
-                    let box_geometry = ShapeGeometry::Box(bbox);
-                    Shape::new(box_geometry)
+                    Shape::Box(bbox)
                 } else {
                     let complex_geometry = ComplexGeometry::new(geometry_points);
-                    let shape_geometry = ShapeGeometry::Complex(complex_geometry);
-                    Shape::new(shape_geometry)
+                    Shape::Complex(complex_geometry)
                 };
 
             if !shapes.contains_key(color) {

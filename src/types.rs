@@ -251,15 +251,15 @@ impl SplittedComplexGeometry
 			let rest_shapes = Self::_split_points_by_bboxes(points.clone(), heightiest_bboxes);
 			for shape in &rest_shapes {
 				match shape {
-					ShapeGeometry::Pixel(point) => {self.points.insert(*point);},
-					ShapeGeometry::Box(bbox) => {self.bboxes.insert(*bbox);},
-					ShapeGeometry::Complex(geom) => {self.merge(geom.copy_inner_geometry());},
+					Shape::Pixel(point) => {self.points.insert(*point);},
+					Shape::Box(bbox) => {self.bboxes.insert(*bbox);},
+					Shape::Complex(geom) => {self.merge(geom.copy_inner_geometry());},
 				}
 			}
 		}
 	}
 
-	fn _split_points_by_bboxes(mut points: HashSet<Point>, heightiest_bboxes: Vec<BBox>) -> Vec<ShapeGeometry> {
+	fn _split_points_by_bboxes(mut points: HashSet<Point>, heightiest_bboxes: Vec<BBox>) -> Vec<Shape> {
 		for bbox in heightiest_bboxes {
 			for x in bbox.min.x ..= bbox.max.x {
 				for y in bbox.min.y ..= bbox.max.y {
@@ -275,7 +275,7 @@ impl SplittedComplexGeometry
 		let neighbours_map = Self::_get_neighbours_map(&points);
 		let shapes = utils::get_shapes_by_neighbour_points(neighbours_map);
 
-		shapes.into_iter().flat_map(|x| x.1).map(|x| x.geometry).collect()
+		shapes.into_iter().flat_map(|x| x.1).map(|x| x).collect()
 	}
 
 	fn _get_neighbours_map(points: &HashSet<Point>) -> NeighboursMap {
@@ -414,58 +414,47 @@ impl ComplexGeometry
 }
 
 #[derive(Clone, Debug)]
-pub enum ShapeGeometry
+pub enum Shape
 {
 	Pixel(Point),
 	Box(BBox),
 	Complex(ComplexGeometry),
 }
 
-impl Default for ShapeGeometry
-{
-	fn default() -> Self {
-		ShapeGeometry::Box(BBox::default())
-	}
-}
-
-#[derive(Clone, Debug)]
-pub struct Shape
-{
-	pub geometry: ShapeGeometry,
-}
-
 impl Default for Shape
 {
 	fn default() -> Self {
-		Shape {
-			geometry: ShapeGeometry::default()
-		}
+		Shape::Box(BBox::default())
 	}
 }
 
 impl Shape
 {
-	pub fn new(geometry: ShapeGeometry) -> Self {
-		Self {
-			geometry: match &geometry {
-				ShapeGeometry::Complex(complex_geometry) => {
-					if let Some(point) = complex_geometry.try_get_as_point() {
-						ShapeGeometry::Pixel(point)
-					} else if let Some(bbox) = complex_geometry.try_get_as_bbox() {
-						ShapeGeometry::Box(bbox)
-					} else {
-						geometry
-					}
-				},
-				ShapeGeometry::Box(bbox) => {
-					if bbox.is_point() {
-						ShapeGeometry::Pixel(bbox.min)
-					} else {
-						geometry
-					}
-				},
-				_ => geometry,
-			}
+	pub fn simplify(&mut self) {
+		*self = match self {
+			Shape::Complex(complex_geometry) => {
+				if let Some(point) = complex_geometry.try_get_as_point() {
+					Shape::Pixel(point)
+				} else if let Some(bbox) = complex_geometry.try_get_as_bbox() {
+					Shape::Box(bbox)
+				} else {
+					return;
+				}
+			},
+			Shape::Box(bbox) => {
+				if bbox.is_point() {
+					Shape::Pixel(bbox.min)
+				} else {
+					return;
+				}
+			},
+			_ => return,
 		}
+	}
+
+	pub fn get_simplified(&self) -> Self {
+		let mut cloned = self.clone();
+		cloned.simplify();
+		cloned
 	}
 }

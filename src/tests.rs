@@ -17,10 +17,10 @@ fn test_black_image() {
 		let mut complex_count: usize = 0;
 
 		for shape in shapes.get(&Color::BLACK).unwrap() {
-			match shape.geometry {
-				ShapeGeometry::Pixel(_) => points_count += 1,
-				ShapeGeometry::Box(_) => boxes_count += 1,
-				ShapeGeometry::Complex(_) => complex_count += 1,
+			match shape {
+				Shape::Pixel(_) => points_count += 1,
+				Shape::Box(_) => boxes_count += 1,
+				Shape::Complex(_) => complex_count += 1,
 			}
 		}
 
@@ -37,7 +37,7 @@ fn test_inner_complex_geometry() {
 	let mut count = 0usize;
 
 	for shape in shapes.get(&Color::BLACK).unwrap() {
-		if let ShapeGeometry::Complex(geom) = &shape.geometry {
+		if let Shape::Complex(geom) = &shape {
 			let outer_bbox = geom.get_outer_bbox();
 			let points = geom.get_points();
 			let boxes = geom.get_bboxes();

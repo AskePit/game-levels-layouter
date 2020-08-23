@@ -31,7 +31,7 @@ fn test_black_image() {
 }
 
 #[test]
-fn test_inner_complex_geometry() {
+fn test_black_geometry() {
 	let layout = utils::get_shapes_layout("assets/black_sample.png").unwrap();
 
 	let mut count = 0usize;
@@ -114,6 +114,243 @@ fn test_inner_complex_geometry() {
 	}
 
 	assert_eq!(count, 5);
+}
+
+#[test]
+fn test_color_geometry() {
+	let layout = utils::get_shapes_layout("assets/color_sample.png").unwrap();
+
+	let mut count = 0usize;
+
+	for (color, shapes) in &layout.shapes {
+		for shape in shapes {
+
+			if *color == Color::new(200, 200, 200) {
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(2, 7, 3, 7));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(43, 147, 132) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(10, 13, 11, 14) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(11, 13, 11, 14)));
+						assert!(geom.get_points().contains(&Point::new(10, 14)));
+						count += 1;
+					}
+
+					if *geom.get_outer_bbox() == BBox::new_xy(7, 10, 9, 13) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(7, 10, 7, 13)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(8, 12, 9, 13)));
+						count += 1;
+					}
+				}
+			}
+
+			else if *color == Color::new(100, 100, 100) {
+				if let Shape::Box(geom) = shape {
+					assert!(*geom == BBox::new_xy(1, 7, 1, 8) || *geom == BBox::new_xy(24, 8, 24, 9));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(25, 25, 25) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(16, 4, 32, 13) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(32, 5, 32, 13)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(18, 12, 29, 13)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(16, 4, 16, 12)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(31, 4, 31, 13)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(19, 4, 30, 5)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(30, 11, 30, 13)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(17, 4, 17, 13)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(18, 4, 18, 6)));
+						count += 1;
+					}
+				}
+			}
+
+			else if *color == Color::new(50, 50, 50) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(18, 6, 30, 11) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(28, 6, 28, 8)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(30, 6, 30, 10)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(29, 6, 29, 11)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(18, 7, 18, 11)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(21, 10, 28, 11)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(20, 9, 20, 11)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(19, 6, 19, 11)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(20, 6, 27, 7)));
+						count += 1;
+					}
+
+					if *geom.get_outer_bbox() == BBox::new_xy(2, 6, 4, 8) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(4, 6, 4, 8)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(2, 6, 3, 6)));
+						count += 1;
+					}
+				}
+			}
+
+			else if *color == Color::new(100, 100, 10) {
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(2, 8, 3, 8));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(0, 255, 255) {
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(5, 6, 8, 7));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(0, 0, 255) {
+				if let Shape::Pixel(geom) = shape {
+					assert!(*geom == Point::new(2, 15) || *geom == Point::new(10, 1));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(0, 0, 0) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(0, 11, 7, 17) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(2, 12, 2, 14)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(5, 17, 7, 17)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(2, 16, 3, 17)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(0, 15, 1, 17)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(4, 14, 4, 17)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(4, 11, 4, 12)));
+
+						assert!(geom.get_points().contains(&Point::new(1, 13)));
+						assert!(geom.get_points().contains(&Point::new(3, 12)));
+						assert!(geom.get_points().contains(&Point::new(3, 14)));
+						count += 1;
+					}
+
+					if *geom.get_outer_bbox() == BBox::new_xy(14, 2, 34, 15) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(33, 2, 33, 15)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(14, 3, 14, 15)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(16, 13, 16, 15)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(17, 14, 32, 15)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(34, 2, 34, 14)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(16, 2, 31, 3)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(32, 2, 32, 4)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(15, 2, 15, 15)));
+						count += 1;
+					}
+				}
+
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(6, 5, 7, 5));
+					count += 1;
+				}
+
+				if let Shape::Pixel(geom) = shape {
+					assert!(*geom == Point::new(1, 11));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(0, 255, 0) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(10, 1, 11, 3) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(11, 1, 11, 3)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(10, 2, 10, 3)));
+						count += 1;
+					}
+				}
+			}
+
+			else if *color == Color::new(217, 31, 35) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(8, 14, 10, 15) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(9, 14, 9, 15)));
+
+						assert!(geom.get_points().contains(&Point::new(8, 14)));
+						assert!(geom.get_points().contains(&Point::new(10, 15)));
+						count += 1;
+					}
+
+					if *geom.get_outer_bbox() == BBox::new_xy(9, 11, 11, 13) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(10, 11, 10, 13)));
+
+						assert!(geom.get_points().contains(&Point::new(9, 11)));
+						assert!(geom.get_points().contains(&Point::new(11, 12)));
+						count += 1;
+					}
+				}
+			}
+
+			else if *color == Color::new(255, 0, 0) {
+
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(7, 2, 8, 2));
+					count += 1;
+				}
+
+				if let Shape::Pixel(geom) = shape {
+					assert!(*geom == Point::new(4, 13));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(255, 0, 255) {
+				if let Shape::Pixel(geom) = shape {
+					assert!(*geom == Point::new(5, 16));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(75, 75, 75) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(25, 8, 28, 9) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(25, 8, 27, 9)));
+
+						assert!(geom.get_points().contains(&Point::new(28, 9)));
+						count += 1;
+					}
+
+					if *geom.get_outer_bbox() == BBox::new_xy(20, 8, 23, 9) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(21, 8, 23, 9)));
+
+						assert!(geom.get_points().contains(&Point::new(20, 8)));
+						count += 1;
+					}
+				}
+			}
+
+			else if *color == Color::new(255, 255, 0) {
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(2, 1, 3, 3));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(100, 10, 100) {
+				if let Shape::Box(geom) = shape {
+					assert_eq!(*geom, BBox::new_xy(0, 6, 1, 6));
+					count += 1;
+				}
+			}
+
+			else if *color == Color::new(255, 147, 0) {
+				if let Shape::Complex(geom) = shape {
+					if *geom.get_outer_bbox() == BBox::new_xy(5, 1, 9, 3) {
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(5, 1, 5, 3)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(6, 3, 8, 3)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(9, 1, 9, 3)));
+						assert!(geom.get_bboxes().contains(&BBox::new_xy(6, 1, 8, 1)));
+						count += 1;
+					}
+				}
+			}
+		}
+	}
+
+	assert_eq!(count, 27);
 }
 
 #[test]

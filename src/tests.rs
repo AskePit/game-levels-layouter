@@ -38,8 +38,8 @@ fn test_inner_complex_geometry() {
 	for shape in &shapes {
 		if let ShapeGeometry::Complex(geom) = &shape.geometry {
 			let outer_bbox = geom.get_outer_bbox();
-			let points = geom.get_inner_geometry().get_inner_points();
-			let boxes = geom.get_inner_geometry().get_inner_bboxes();
+			let points = geom.get_points();
+			let boxes = geom.get_bboxes();
 
 			// big circle
 			if *outer_bbox == BBox::new_xy(2, 1, 8, 7) {

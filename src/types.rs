@@ -114,15 +114,16 @@ pub type NeighboursMap = HashMap<Point, (Color, Vec<Point>)>;
 #[derive(Clone, Debug, Default)]
 pub struct ComplexGeometry
 {
-	inner_geometry: SplittedComplexGeometry,
+	bboxes: HashSet<BBox>,
+	points: HashSet<Point>,
 	outer_bbox: BBox,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct SplittedComplexGeometry
+struct SplittedComplexGeometry
 {
-	inner_bboxes: HashSet<BBox>,
-	inner_points: HashSet<Point>,
+	bboxes: HashSet<BBox>,
+	points: HashSet<Point>,
 }
 
 impl SplittedComplexGeometry
@@ -134,8 +135,8 @@ impl SplittedComplexGeometry
 	}
 
 	pub fn merge(&mut self, other: SplittedComplexGeometry) {
-		self.inner_points.extend(other.inner_points);
-		self.inner_bboxes.extend(other.inner_bboxes);
+		self.points.extend(other.points);
+		self.bboxes.extend(other.bboxes);
 	}
 
 	fn _init(&mut self, points: &HashSet<Point>, outer_bbox: &BBox) {
@@ -239,9 +240,9 @@ impl SplittedComplexGeometry
 
 		for bbox in &heightiest_bboxes {
 			if bbox.is_point() {
-				self.inner_points.insert(bbox.min);
+				self.points.insert(bbox.min);
 			} else {
-				self.inner_bboxes.insert(*bbox);
+				self.bboxes.insert(*bbox);
 			}
 		}
 
@@ -250,8 +251,8 @@ impl SplittedComplexGeometry
 			let rest_shapes = Self::_split_points_by_bboxes(points.clone(), heightiest_bboxes);
 			for shape in &rest_shapes {
 				match shape {
-					ShapeGeometry::Pixel(point) => {self.inner_points.insert(*point);},
-					ShapeGeometry::Box(bbox) => {self.inner_bboxes.insert(*bbox);},
+					ShapeGeometry::Pixel(point) => {self.points.insert(*point);},
+					ShapeGeometry::Box(bbox) => {self.bboxes.insert(*bbox);},
 					ShapeGeometry::Complex(geom) => {self.merge(geom.copy_inner_geometry());},
 				}
 			}
@@ -321,12 +322,12 @@ impl SplittedComplexGeometry
 		neighbours
 	}
 
-	pub fn get_inner_bboxes(&self) -> &HashSet<BBox> {
-		&self.inner_bboxes
+	pub fn get_bboxes(&self) -> &HashSet<BBox> {
+		&self.bboxes
 	}
 
-	pub fn get_inner_points(&self) -> &HashSet<Point> {
-		&self.inner_points
+	pub fn get_points(&self) -> &HashSet<Point> {
+		&self.points
 	}
 }
 
@@ -347,17 +348,19 @@ impl ComplexGeometry
 	}
 
 	fn _calc_inner_geometries(&mut self, points: &HashSet<Point>) {
-		self.inner_geometry = SplittedComplexGeometry::new(points, &self.outer_bbox);
+		let inner_geometry = SplittedComplexGeometry::new(points, &self.outer_bbox);
+		self.bboxes = inner_geometry.bboxes;
+		self.points = inner_geometry.points;
 	}
 
 	pub fn contains(&self, point: &Point) -> bool {
-		for bbox in &self.inner_geometry.inner_bboxes {
+		for bbox in &self.bboxes {
 			if bbox.contains(point) {
 				return true;
 			}
 		}
 
-		for p in &self.inner_geometry.inner_points {
+		for p in &self.points {
 			if p == point {
 				return true;
 			}
@@ -366,20 +369,16 @@ impl ComplexGeometry
 		false
 	}
 
+	pub fn get_bboxes(&self) -> &HashSet<BBox> {
+		&self.bboxes
+	}
+
+	pub fn get_points(&self) -> &HashSet<Point> {
+		&self.points
+	}
+
 	pub fn get_outer_bbox(&self) -> &BBox {
 		&self.outer_bbox
-	}
-
-	pub fn get_inner_geometry(&self) -> &SplittedComplexGeometry {
-		&self.inner_geometry
-	}
-
-	pub fn take_inner_geometry(self) -> SplittedComplexGeometry {
-		self.inner_geometry
-	}
-
-	pub fn copy_inner_geometry(&self) -> SplittedComplexGeometry {
-		self.inner_geometry.clone()
 	}
 
 	pub fn try_get_as_bbox(&self) -> Option<BBox> {
@@ -404,6 +403,13 @@ impl ComplexGeometry
 		}
 
 		None
+	}
+
+	fn copy_inner_geometry(&self) -> SplittedComplexGeometry {
+		SplittedComplexGeometry {
+			bboxes: self.bboxes.clone(),
+			points: self.points.clone()
+		}
 	}
 }
 

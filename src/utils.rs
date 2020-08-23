@@ -121,7 +121,7 @@ pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> HashMap<Colo
 
             collect_complex_shape(point, &neighbours, &mut processed, &mut geometry_points);
 
-            let shape =
+            let mut shape =
                 if geometry_points.len() == 1 {
                     Shape::Pixel(*geometry_points.iter().next().unwrap())
                 } else if let Some(bbox) = are_points_is_bbox(&geometry_points) {
@@ -130,6 +130,8 @@ pub fn get_shapes_by_neighbour_points(neighbours: NeighboursMap) -> HashMap<Colo
                     let complex_geometry = ComplexGeometry::new(geometry_points);
                     Shape::Complex(complex_geometry)
                 };
+
+            shape.simplify();
 
             if !shapes.contains_key(color) {
                 shapes.insert(*color, Vec::new());
